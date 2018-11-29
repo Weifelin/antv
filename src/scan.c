@@ -143,9 +143,9 @@ int scan(FILE* fd, FILE* db, char* virus_name){
 
     free(line_ptr);
     free(file);
-    //fclose(fd);
+    fclose(fd);
     //fclose(db);
-
+    fseek(db, 0, SEEK_SET);
 
     //return ret;
     return SUCCESS;

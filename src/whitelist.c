@@ -1,9 +1,10 @@
 #include "whitelist.h"
+#include <errno.h>
 
 int whitelistCheck(const char* filepath){
     FILE* file = fopen(filepath,"rb");
     if (file == NULL){
-        fprintf(stderr, "%s\n", "File to read not found");
+        fprintf(stderr, "%s errno: %s\n", "File to read not found", strerror(errno));
         return 2;
     }
     int out = UsingFileWhitelistCheck(file, filepath);

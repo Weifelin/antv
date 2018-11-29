@@ -208,7 +208,7 @@ void on_demand(const char* start_path){
                         }
 
                         int result = scan(fd, db, virus_name);
-
+                        //fclose(fd);
                         if (result == SUCCESS)
                         {
                             if(*virus_name == 0){
@@ -257,6 +257,7 @@ void on_demand(const char* start_path){
             }
 
             int result = scan(fd, db, virus_name);
+            //fclose(fd);
             if (result == SUCCESS)
             {
                 if(*virus_name == 0){
