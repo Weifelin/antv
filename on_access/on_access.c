@@ -60,7 +60,7 @@ static struct file_operations fops =
 static unsigned long *sys_call_table = (unsigned long) 0xffffffff81a00240;
 
 /* This defines a pointer to the real open() syscall */
-static asmlinkage int (*old_open)(const char *filename, int flags, int mode);
+static asmlinkage int (*old_open)(const char *filename, int flags);
 
 
 
