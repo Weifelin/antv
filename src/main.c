@@ -190,6 +190,11 @@ void on_demand(const char* start_path){
             while((entry = readdir(dir)) != NULL){
                 if(strcmp(entry->d_name,".")!=0 && strcmp(entry->d_name,"..")!=0){
                     strcpy(path,start_path);
+                    int last = strlen(path) -1;;
+                    if (path[last] != '/')
+                    {
+                        strcat(path,"/");
+                    }
                     //strcat(path,"/");
                     strcat(path,entry->d_name);
                     //scan_f(path,sigs,sigs_length,sigNumber);

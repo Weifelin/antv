@@ -60,7 +60,7 @@ static struct file_operations fops =
 static unsigned long *sys_call_table = (unsigned long) 0xffffffff81a00240;
 
 /* This defines a pointer to the real open() syscall */
-static asmlinkage int (*old_open)(const char *filename, int flags);
+static asmlinkage int (*old_open)(const char *filename, int flags, int mode);
 
 
 
@@ -90,12 +90,20 @@ asmlinkage int
 new_open(const char *filename, int flags)
 {
 
-    /* perform our malicious code here */
+
     printk(KERN_INFO "Intercepting open(%s, %X, %X)\n", filename, flags, mode);
 
-    /*whitelist check*/
-    //sys_call_table[__NR_open] = old_open;//make old open usable.
+    /*
+      calling user space function. Calling antv.
+    */
 
+
+    char *argv[] = { "/home/student/Desktop/cse331/bin/antv","-scan", "filename", NULL };
+    static char *envp[] = {
+        "HOME=/",
+        "TERM=linux",
+        "PATH=/sbin:/bin:/usr/sbin:/usr/bin", NULL };
+    call_usermodehelper( argv[0], argv, envp, UMH_WAIT_PROC );
 
 
 
