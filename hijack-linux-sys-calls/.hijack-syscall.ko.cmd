@@ -1,0 +1,1 @@
+cmd_/home/student/Desktop/cse331/hijack-linux-sys-calls/hijack-syscall.ko := ld -r -m elf_x86_64 -T ./scripts/module-common.lds --build-id  -o /home/student/Desktop/cse331/hijack-linux-sys-calls/hijack-syscall.ko /home/student/Desktop/cse331/hijack-linux-sys-calls/hijack-syscall.o /home/student/Desktop/cse331/hijack-linux-sys-calls/hijack-syscall.mod.o ;  true
