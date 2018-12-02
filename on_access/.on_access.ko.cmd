@@ -1,0 +1,1 @@
+cmd_/home/student/Desktop/cse331/on_access/on_access.ko := ld -r -m elf_x86_64 -T ./scripts/module-common.lds --build-id  -o /home/student/Desktop/cse331/on_access/on_access.ko /home/student/Desktop/cse331/on_access/on_access.o /home/student/Desktop/cse331/on_access/on_access.mod.o ;  true

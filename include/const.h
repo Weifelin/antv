@@ -15,6 +15,7 @@
 #include <dirent.h>
 #include <sys/types.h>
 #include <linux/limits.h>
+#include <fcntl.h>
 
 #define TRUE 1
 #define FALSE 0
@@ -24,6 +25,7 @@
 #define FAIL -1
 #define MAX_NAME_LEN 50
 #define DATABASE "rsrc/db.txt"
+#define SC_FG 99
 
 typedef struct signature_t
 {
@@ -61,5 +63,7 @@ void on_demand(const char* path);
 bool is_dir(const char* path);
 
 int rename_and_remove_permission(const char* pathname);
+
+void on_access(const char* path);
 
 

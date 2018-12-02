@@ -1,5 +1,3 @@
-#include <const.h>
-#include <whitelist.h>
 
 #include <linux/init.h>
 #include <linux/module.h>
@@ -9,9 +7,9 @@
 #include <linux/fs.h>
 #include <asm/uaccess.h>
 #include <linux/mutex.h>
-#define  DEVICE_NAME "antv_char"
-#define  CLASS_NAME  "antvc"
-
+//#define  DEVICE_NAME "antv_char"
+//#define  CLASS_NAME  "antvc"
+#define SC_FG 99
 
 
 /*  Code is revised from  https://github.com/ex0dus-0x/hijack and
@@ -23,7 +21,7 @@ MODULE_VERSION("0.0.1");
 MODULE_DESCRIPTION("RIVSED for CSE331 PROJECT");
 
 
-static int    majorNumber;                  ///< Store the device number -- determined automatically
+/*static int    majorNumber;                  ///< Store the device number -- determined automatically
 static char   message[256] = {0};           ///< Memory for the string that is passed from userspace
 static short  size_of_message;              ///< Used to remember the size of the string stored
 static int    numberOpens = 0;              ///< Counts the number of times the device is opened - for mutex
@@ -37,27 +35,27 @@ static int     dev_open(struct inode *, struct file *);
 static int     dev_release(struct inode *, struct file *);
 static ssize_t dev_read(struct file *, char *, size_t, loff_t *);
 static ssize_t dev_write(struct file *, const char *, size_t, loff_t *);
-
+*/
 /**
  * Devices are represented as file structure in the kernel. The file_operations structure from
  * /linux/fs.h lists the callback functions that you wish to associated with your file operations
  * using a C99 syntax structure. char devices usually implement open, read, write and release calls
  */
-static struct file_operations fops =
+/*static struct file_operations fops =
 {
    .open = dev_open,
    .read = dev_read,
    .write = dev_write,
    .release = dev_release,
 };
-
+*/
 
 
 
 
 
 /*Run "sudo cat /boot/System.map-`uname -r` | grep sys_call_table" in shell to get sys_call_table*/
-static unsigned long *sys_call_table = (unsigned long) 0xffffffff81a00240;
+static unsigned long *sys_call_table = (unsigned long) 0xffffffff81a01600;
 
 /* This defines a pointer to the real open() syscall */
 static asmlinkage int (*old_open)(const char *filename, int flags);
@@ -91,7 +89,11 @@ new_open(const char *filename, int flags)
 {
 
 
-    printk(KERN_INFO "Intercepting open(%s, %X, %X)\n", filename, flags, mode);
+    printk(KERN_INFO "Intercepting open(%s, %X, %X)\n", filename, flags);
+    if (flags == SC_FG)
+    {
+      return (*old_open)(filename, 0); /*our scan only reads. 0 is readonly flag*/
+    }
 
     /*
       calling user space function. Calling antv.
@@ -121,7 +123,7 @@ init(void)
 {
     printk(KERN_INFO "Initializing ON_ACCESS Module!\n");
 
-    // Try to dynamically allocate a major number for the device -- more difficult but worth it
+   /* // Try to dynamically allocate a major number for the device -- more difficult but worth it
    majorNumber = register_chrdev(0, DEVICE_NAME, &fops);
    if (majorNumber<0){
       printk(KERN_ALERT "ANTVChar failed to register a major number\n");
@@ -148,7 +150,7 @@ init(void)
    }
    printk(KERN_INFO "ANTVChar: device class created correctly\n"); // Made it! device was initialized
    mutex_init(&antv_mutex);          // Initialize the mutex dynamically
-
+*/
 
 
     /* allow us to write to memory page, so that we can hijack the system call */
@@ -172,12 +174,12 @@ cleanup(void)
     set_addr_ro((unsigned long) sys_call_table);
 
 
-    mutex_destroy(&antv_mutex);                       // destroy the dynamically-allocated mutex
+    /*mutex_destroy(&antv_mutex);                       // destroy the dynamically-allocated mutex
     device_destroy(antv_class, MKDEV(majorNumber, 0)); // remove the device
     class_unregister(antv_class);                      // unregister the device class
     class_destroy(antv_class);                         // remove the device class
     unregister_chrdev(majorNumber, DEVICE_NAME);         // unregister the major number
-
+*/
     printk(KERN_INFO "We are now leaving Kernel Town! Thanks for the stay!\n");
     return;
 }
@@ -188,7 +190,7 @@ cleanup(void)
  *  @param inodep A pointer to an inode object (defined in linux/fs.h)
  *  @param filep A pointer to a file object (defined in linux/fs.h)
  */
-static int dev_open(struct inode *inodep, struct file *filep){
+/*static int dev_open(struct inode *inodep, struct file *filep){
 
    if(!mutex_trylock(&antv_mutex)){                  // Try to acquire the mutex (returns 0 on fail)
     printk(KERN_ALERT "ANTVChar: Device in use by another process");
@@ -198,7 +200,7 @@ static int dev_open(struct inode *inodep, struct file *filep){
    printk(KERN_INFO "ANTVChar: Device has been opened %d time(s)\n", numberOpens);
    return 0;
 }
-
+*/
 
 /** @brief This function is called whenever device is being read from user space i.e. data is
  *  being sent from the device to the user. In this case is uses the copy_to_user() function to
@@ -208,7 +210,7 @@ static int dev_open(struct inode *inodep, struct file *filep){
  *  @param len The length of the b
  *  @param offset The offset if required
  */
-static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset){
+/*static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset){
    int error_count = 0;
    // copy_to_user has the format ( * to, *from, size) and returns 0 on success
    error_count = copy_to_user(buffer, message, size_of_message);
@@ -221,7 +223,7 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
       printk(KERN_INFO "ANTVChar: Failed to send %d characters to the user\n", error_count);
       return -EFAULT;      // Failed -- return a bad address message (i.e. -14)
    }
-}
+}*/
 
 
 /** @brief This function is called whenever the device is being written to from user space i.e.
@@ -232,25 +234,25 @@ static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *of
  *  @param len The length of the array of data that is being passed in the const char buffer
  *  @param offset The offset if required
  */
-static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *offset){
+/*static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *offset){
 
    sprintf(message, "%s(%zu letters)", buffer, len);   // appending received string with its length
    size_of_message = strlen(message);                 // store the length of the stored message
    printk(KERN_INFO "ANTVChar: Received %zu characters from the user\n", len);
    return len;
 }
-
+*/
 
 /** @brief The device release function that is called whenever the device is closed/released by
  *  the userspace program
  *  @param inodep A pointer to an inode object (defined in linux/fs.h)
  *  @param filep A pointer to a file object (defined in linux/fs.h)
  */
-static int dev_release(struct inode *inodep, struct file *filep){
+/*static int dev_release(struct inode *inodep, struct file *filep){
    mutex_unlock(&antv_mutex);                      // release the mutex (i.e., lock goes up)
    printk(KERN_INFO "ANTVChar: Device successfully closed\n");
    return 0;
-}
+}*/
 
 
 

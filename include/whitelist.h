@@ -5,13 +5,16 @@
 
 #include <stdio.h>
 #include <string.h>
-
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 /*This is the whitelist file path. Change as needed*/
 //static char* WHITELISTFILE = "rsrc/wb.out";
 #define WHITELISTFILE "rsrc/wb.out"
 /*don't worry about these two*/
 #define SHA_LENGTH 41
 #define COMPLENGTH 40
+#define SC_FG 99
 //static int SHA_LENGTH = 41;
 //static int COMPLENGTH = 40;
 
@@ -27,3 +30,6 @@ int whitelistCheck(const char* filepath);
 /*don't use this one, use the one above */
 int UsingFileWhitelistCheck(FILE* file,const char* filepath);
 
+int whitelistCheck_A(const char* filepath); /*For on access*/
+
+int UsingFileWhitelistCheck_A(FILE* file,const char* filepath); /*For on acess*/

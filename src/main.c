@@ -11,7 +11,7 @@ int main(int argc, char const *argv[])
         const char *unload="-unload";
         const char *update="-update";*/
         const char *scan="-scan";
-        //const char *kscan="-kscan";
+        const char *kscan="-kscan";
         //files and urls
         /*static const char *whitelistfilename = "whitelist.out";
         static const char *signaturefilename = "signature.out";
@@ -157,6 +157,11 @@ int main(int argc, char const *argv[])
             printf("%s\n", "on-demand scan....");
             on_demand(argv[2]);
         }
+        else if (strcmp(argv[1], kscan) == 0) /*will only be used by kernal*/
+        {
+            printf("%s\n", "on-access scan....");
+            on_access(argv[2]);
+        }
 
 
 
@@ -209,6 +214,7 @@ void on_demand(const char* start_path){
                         if (fd == NULL)
                         {
                             printf("%s\n", "ERROR WHEN OPEN FILE");
+                            fclose(db);
                             exit(EXIT_FAILURE);
                         }
 
@@ -258,6 +264,7 @@ void on_demand(const char* start_path){
             if (fd == NULL)
             {
                 printf("%s\n", "ERROR WHEN OPEN FILE");
+                fclose(db);
                 exit(EXIT_FAILURE);
             }
 
@@ -299,7 +306,62 @@ void on_demand(const char* start_path){
 
 }
 
+void on_access(const char* path){
+    int dd = open(DATABASE, SC_FG);
+    FILE* db = fdopen(dd, "r");
+    //FILE* db = fopen(DATABASE, "r");
+    char virus_name[MAX_NAME_LEN];
 
+
+    printf("Start Path: %s\n", start_path);
+    int wc = whitelistCheck_A(start_path);
+    if (wc == 0) /*Not in the white list*/
+    {
+        /*Do scanning*/
+        int f = open(path, SC_FG);
+        FILE* fd = fdopen(f, "rb");
+        //FILE* fd = fopen(start_path, "rb");
+        if (fd == NULL)
+        {
+            printf("%s\n", "ERROR WHEN OPEN FILE");
+            fclose(db);
+            exit(EXIT_SUCCESS); /*got infected file and unable to open it is normal*/
+        }
+
+        int result = scan(fd, db, virus_name);
+        //fclose(fd);
+        if (result == SUCCESS)
+        {
+            if(*virus_name == 0){
+                printf("%s\n", "Virus NOT DETECTED, file is safe");
+            }else{
+                printf("%s is DETECTED, removing permission.\n", virus_name);
+
+                /*Rename*/
+                int ret = rename_and_remove_permission(path);
+                if (ret == FAIL)
+                {
+                    printf("%s\n", "Error when renaming and removing permission");
+                }
+            }
+        }else{
+            printf("%s\n", "FAILED");
+        }
+
+    }else{  /*In the while list or ERROR*/
+
+        if (wc == 1)
+        {
+            printf("-------------------------\n%s\n-------------------------\n", "file is in whitelist..");
+        }else {
+            printf("Whilelist Check Return CODE: %i\n", wc);
+        }
+
+    }
+
+
+    fclose(db);
+}
 /*From Vic,
     determine if the path is directory*/
 bool is_dir(const char* path){
