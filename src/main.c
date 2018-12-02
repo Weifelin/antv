@@ -313,8 +313,8 @@ void on_access(const char* path){
     char virus_name[MAX_NAME_LEN];
 
 
-    printf("Start Path: %s\n", start_path);
-    int wc = whitelistCheck_A(start_path);
+    printf("Start Path: %s\n", path);
+    int wc = whitelistCheck_A(path);
     if (wc == 0) /*Not in the white list*/
     {
         /*Do scanning*/
