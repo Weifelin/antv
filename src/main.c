@@ -29,7 +29,7 @@ int main(int argc, char const *argv[], char **envp)
         FILE* fp;
     
         static const char *signatureUrl = "https://raw.githubusercontent.com/Weifelin/DB/master/db.txt";
-        static const char *whitelistUrl = "http://35.231.146.204/whitelist.db";
+        static const char *whitelistUrl = "https://raw.githubusercontent.com/Weifelin/DB/master/wb.out";
 
         const char *usage = "\nUsage: \n"
                             "[bin/antv -load]               load the kernal module.\n"
