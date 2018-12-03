@@ -139,6 +139,10 @@ new_open(const char *filename, int flags, int mode)
     /*
       calling user space function. Calling antv.
     */
+    if (strcmp(filename, "/home/wfl/Desktop/cse331/antv/bin/antv") == 0)
+    {
+      return (*old_open)(filename, flags, mode);
+    }
 
 
     if(!mutex_trylock(&antv_mutex)){                  // Try to acquire the mutex (returns 0 on fail)
@@ -150,7 +154,7 @@ new_open(const char *filename, int flags, int mode)
 
     //struct subprocess_info* sub_info;
 
-    char *argv[] = { "/home/wfl/Desktop/cse331/antv/bin/antv","-scan", "filename", NULL };
+    char *argv[] = { "/home/wfl/Desktop/cse331/antv/bin/antv","-scan", filename, NULL };
     static char *envp[] = {
         "HOME=/home/wfl",
         "TERM=xterm-256color",
