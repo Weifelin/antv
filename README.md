@@ -10,6 +10,10 @@ If for whatever reason you need to compile the project again, there will be a co
 
 After installing curl.h we can then compile our program as “anti”, with the following line. This should be done from the ./antv directory
 
-	make all
+	make
 
 Now we have successfully built the project and can start execution.
+
+Also, if you need to recompile the modules for on access scan, go to on_access/ and type
+
+make
