@@ -16,6 +16,7 @@
 #include <sys/types.h>
 #include <linux/limits.h>
 #include <fcntl.h>
+#include <errno.h>
 
 #define TRUE 1
 #define FALSE 0
@@ -24,8 +25,11 @@
 #define SUCCESS 1
 #define FAIL -1
 #define MAX_NAME_LEN 50
-#define DATABASE "rsrc/db.txt"
+#define DATABASE "/home/wfl/Desktop/cse331/antv/rsrc/db.txt"
 #define SC_FG 99
+#define FOUND -5
+#define LOAD "sudo insmod /home/wfl/Desktop/cse331/antv/on_access/on_access.ko"
+#define UNLOAD "sudo rmmod on_access"
 
 typedef struct signature_t
 {
@@ -58,12 +62,10 @@ int sig_compare(char* file, char* sig);
 
 /*Main boyd of on-demand scanning
     char* path - The path or the filename that the use provided.*/
-void on_demand(const char* path);
+int on_demand(const char* path);
 
 bool is_dir(const char* path);
 
 int rename_and_remove_permission(const char* pathname);
 
-void on_access(const char* path);
-
-
+int on_access(const char* path);

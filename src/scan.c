@@ -189,7 +189,7 @@ ssize_t load_file(FILE* fd, char** mem){ /*mem needs to be free later*/
     size = ftell(fd);
     alloc = size + 1;
     ret_value_2 = fseek(fd, 0, SEEK_SET); /*Reset the file discriptor*/
-
+    printf("ret_value_2: %i\n", ret_value_2);
 
 
 
@@ -201,7 +201,8 @@ ssize_t load_file(FILE* fd, char** mem){ /*mem needs to be free later*/
 
     if (*mem == NULL || (read != size))
     {
-        printf("%s\n", "Error happens within load_file");
+
+        printf("Error happens within load_file, read: %i, size %i, errno: %s\n", (int)read, (int)size, strerror(errno));
         return -1;
     }
 

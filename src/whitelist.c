@@ -1,4 +1,4 @@
-#include "whitelist.h"
+#include <whitelist.h>
 #include <errno.h>
 
 int whitelistCheck(const char* filepath){

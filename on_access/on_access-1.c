@@ -1,30 +1,21 @@
 
-#define _GNU_SOURCE
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/unistd.h>
 #include <linux/device.h>
 #include <linux/fs.h>
-//#include <asm/uaccess.h>
+#include <asm/uaccess.h>
 #include <linux/uaccess.h>
 #include <linux/mutex.h>
 #include <linux/kallsyms.h>
-#include <linux/kmod.h>
-
-//#define SC_FG 99
+#include <linux/miscevice.h>
 
 //#include <linux/string.h>
-/*#define  DEVICE_NAME "antv_char"
+#define  DEVICE_NAME "antv_char"
 #define  CLASS_NAME  "antvc"
 #define SC_FG 99
-*//*sudo cat /proc/kallsyms | grep sys_call_table*/
-
-
-
-//#define UMH_WAIT_PROC 2
-//#define GFP_ATOMIC 0x80000u
-
+/*sudo cat /proc/kallsyms | grep sys_call_table*/
 
 /*  Code is revised from  https://github.com/ex0dus-0x/hijack and
     https://github.com/derekmolloy/exploringBB/tree/master/extras/kernel/ebbcharmutex
@@ -35,34 +26,34 @@ MODULE_VERSION("0.0.1");
 MODULE_DESCRIPTION("RIVSED for CSE331 PROJECT");
 
 
-/*static int    majorNumber;                  ///< Store the device number -- determined automatically
-static char   message[256] = {0};           ///< Memory for the string that is passed from userspace
+static int    majorNumber;                  ///< Store the device number -- determined automatically
+static char   message[512] = {0};           ///< Memory for the string that is passed from userspace
 static short  size_of_message;              ///< Used to remember the size of the string stored
 static int    numberOpens = 0;              ///< Counts the number of times the device is opened - for mutex
 static struct class*  antv_class  = NULL; ///< The device-driver class struct pointer
 static struct device* antv_device = NULL; ///< The device-driver device struct pointer
-*/
+
 static DEFINE_MUTEX(antv_mutex);     ///< Macro to declare a new mutex
 
 
-/*static int     dev_open(struct inode *, struct file *);
+static int     dev_open(struct inode *, struct file *);
 static int     dev_release(struct inode *, struct file *);
 static ssize_t dev_read(struct file *, char *, size_t, loff_t *);
 static ssize_t dev_write(struct file *, const char *, size_t, loff_t *);
-*/
+
 /**
  * Devices are represented as file structure in the kernel. The file_operations structure from
  * /linux/fs.h lists the callback functions that you wish to associated with your file operations
  * using a C99 syntax structure. char devices usually implement open, read, write and release calls
  */
-/*static struct file_operations fops =
+static struct file_operations fops =
 {
    .open = dev_open,
    .read = dev_read,
    .write = dev_write,
    .release = dev_release,
 };
-*/
+
 
 
 
@@ -105,7 +96,7 @@ new_open(const char *filename, int flags, int mode)
 {
 
 
-   /* if (flags == SC_FG)
+    /*if (flags == SC_FG)
     {
 
 
@@ -124,7 +115,12 @@ new_open(const char *filename, int flags, int mode)
     
     printk(KERN_INFO "Intercepting open(%s, %X, %X)\n", filename, flags);
 
-    //*message = 0;
+
+    if(!mutex_trylock(&antv_mutex)){                  // Try to acquire the mutex (returns 0 on fail)
+      printk(KERN_ALERT "ANTVChar: Device in use by another process");
+      return -EBUSY;
+    }
+    *message = 0;
     /*saving the file name to message. Each time the user space (after the our program is activated in kscan mode)
       reads the character device "/dev/antv_char" is reading from message.
 
@@ -133,49 +129,29 @@ new_open(const char *filename, int flags, int mode)
 
       The current issue is "dev/antv_char" being unable to open. 
       */
-    //strcpy(message, filename); 
+    strcpy(message, filename); 
+
+    mutex_unlock(&antv_mutex); 
+
+    printk(KERN_INFO "ANTVChar: After unlocked: message: %s\n", message);
 
 
     /*
       calling user space function. Calling antv.
     */
 
-
-    if(!mutex_trylock(&antv_mutex)){                  // Try to acquire the mutex (returns 0 on fail)
-      printk(KERN_ALERT "MUTEX: open in use by another process");
-      return -EBUSY;
-    }
-
-    sys_call_table[__NR_open] = old_open;
-
-    //struct subprocess_info* sub_info;
-
-    char *argv[] = { "/home/wfl/Desktop/cse331/antv/bin/antv","-scan", "filename", NULL };
+    /*sys_call_table[__NR_open] = old_open;
+    char *argv[] = { "/home/wfl/Desktop/cse331/antv/bin/antv","-kscan", "filename", NULL };
     static char *envp[] = {
-        "HOME=/home/wfl",
-        "TERM=xterm-256color",
-        "PATH=/home/wfl/bin:/home/wfl/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin",
-        "SHELL=/bin/bash", 
-        "USER=wfl",
-        "DISPLAY=:0", 
-        NULL };
-    int cu = call_usermodehelper( argv[0], argv, envp, UMH_WAIT_PROC);
-    /*sub_info = call_usermodehelper_setup(argv[0], argv, envp, GFP_ATOMIC, NULL, NULL, NULL);
-    if(sub_info == NULL) {
-      //return -ENOMEM;
-      printk(KERN_ALERT "After call_usermodehelper_setup, returns NULL, ENOMEM: %i", -ENOMEM);
-    }else{
-    //printk(KERN_ALERT "After call_usermodehelper, returns: %i", cu);
-      int cu = call_usermodehelper_exec(sub_info, UMH_WAIT_PROC);
-      printk(KERN_ALERT "After call_usermodehelper_exec, returns: %i", cu);
+        "HOME=/",
+        "TERM=linux",
+        "PATH=/sbin:/bin:/usr/sbin:/usr/bin", NULL };
+    call_usermodehelper( argv[0], argv, envp, UMH_WAIT_PROC );
+    sys_call_table[__NR_open] = new_open;*/
 
-    }*/
 
-    printk(KERN_ALERT "After call_usermodehelper, returns: %i", cu);
-    sys_call_table[__NR_open] = new_open;
+    //sys_call_table[__NR_open] = new_open;
 
-    mutex_unlock(&antv_mutex); 
-    printk(KERN_ALERT "MUTEX: unlocked");
 
     /* give execution BACK to the original syscall */
     return (*old_open)(filename, flags, mode);
@@ -188,7 +164,7 @@ init(void)
 {
     printk(KERN_INFO "Initializing ON_ACCESS Module!\n");
 
-   /*// Try to dynamically allocate a major number for the device -- more difficult but worth it
+   // Try to dynamically allocate a major number for the device -- more difficult but worth it
    majorNumber = register_chrdev(0, DEVICE_NAME, &fops);
    if (majorNumber<0){
       printk(KERN_ALERT "ANTVChar failed to register a major number\n");
@@ -214,9 +190,7 @@ init(void)
       return PTR_ERR(antv_device);
    }
    printk(KERN_INFO "ANTVChar: device class created correctly\n"); // Made it! device was initialized
-   */
-    mutex_init(&antv_mutex);          // Initialize the mutex dynamically
-
+   mutex_init(&antv_mutex);          // Initialize the mutex dynamically
 
 
     sys_call_table = (unsigned long)kallsyms_lookup_name("sys_call_table");
@@ -244,11 +218,11 @@ cleanup(void)
 
 
     mutex_destroy(&antv_mutex);                       // destroy the dynamically-allocated mutex
-    /*device_destroy(antv_class, MKDEV(majorNumber, 0)); // remove the device
+    device_destroy(antv_class, MKDEV(majorNumber, 0)); // remove the device
     class_unregister(antv_class);                      // unregister the device class
     class_destroy(antv_class);                         // remove the device class
     unregister_chrdev(majorNumber, DEVICE_NAME);         // unregister the major number
-*/
+
     printk(KERN_INFO "We are now leaving Kernel Town! Thanks for the stay!\n");
     return;
 }
@@ -259,7 +233,7 @@ cleanup(void)
  *  @param inodep A pointer to an inode object (defined in linux/fs.h)
  *  @param filep A pointer to a file object (defined in linux/fs.h)
  */
-/*static int dev_open(struct inode *inodep, struct file *filep){
+static int dev_open(struct inode *inodep, struct file *filep){
 
    if(!mutex_trylock(&antv_mutex)){                  // Try to acquire the mutex (returns 0 on fail)
     printk(KERN_ALERT "ANTVChar: Device in use by another process");
@@ -268,7 +242,7 @@ cleanup(void)
    numberOpens++;
    printk(KERN_INFO "ANTVChar: Device has been opened %d time(s)\n", numberOpens);
    return 0;
-}*/
+}
 
 
 /** @brief This function is called whenever device is being read from user space i.e. data is
@@ -279,7 +253,7 @@ cleanup(void)
  *  @param len The length of the b
  *  @param offset The offset if required
  */
-/*static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset){
+static ssize_t dev_read(struct file *filep, char *buffer, size_t len, loff_t *offset){
    int error_count = 0;
    // copy_to_user has the format ( * to, *from, size) and returns 0 on success
    error_count = copy_to_user(buffer, message, size_of_message);
@@ -293,7 +267,7 @@ cleanup(void)
       return -EFAULT;      // Failed -- return a bad address message (i.e. -14)
    }
 }
-*/
+
 
 /** @brief This function is called whenever the device is being written to from user space i.e.
  *  data is sent to the device from the user. The data is copied to the message[] array in this
@@ -303,13 +277,15 @@ cleanup(void)
  *  @param len The length of the array of data that is being passed in the const char buffer
  *  @param offset The offset if required
  */
-/*static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *offset){
+static ssize_t dev_write(struct file *filep, const char *buffer, size_t len, loff_t *offset){
 
-   sprintf(message, "%s(%zu letters)", buffer, len);   // appending received string with its length
+   //sprintf(message, "%s(%zu letters)", buffer, len);   // appending received string with its length
+   *message = 0;
+   strcpy(message, buffer);
    size_of_message = strlen(message);                 // store the length of the stored message
    printk(KERN_INFO "ANTVChar: Received %zu characters from the user\n", len);
    return len;
-}*/
+}
 
 
 /** @brief The device release function that is called whenever the device is closed/released by
@@ -317,11 +293,11 @@ cleanup(void)
  *  @param inodep A pointer to an inode object (defined in linux/fs.h)
  *  @param filep A pointer to a file object (defined in linux/fs.h)
  */
-/*static int dev_release(struct inode *inodep, struct file *filep){
+static int dev_release(struct inode *inodep, struct file *filep){
    mutex_unlock(&antv_mutex);                      // release the mutex (i.e., lock goes up)
    printk(KERN_INFO "ANTVChar: Device successfully closed\n");
    return 0;
-}*/
+}
 
 
 

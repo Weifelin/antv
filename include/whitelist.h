@@ -10,7 +10,7 @@
 #include <fcntl.h>
 /*This is the whitelist file path. Change as needed*/
 //static char* WHITELISTFILE = "rsrc/wb.out";
-#define WHITELISTFILE "rsrc/wb.out"
+#define WHITELISTFILE "/home/wfl/Desktop/cse331/antv/rsrc/wb.out"
 /*don't worry about these two*/
 #define SHA_LENGTH 41
 #define COMPLENGTH 40

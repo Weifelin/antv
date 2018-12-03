@@ -1,0 +1,1 @@
+cmd_/home/wfl/Desktop/cse331/antv/on_access/on_access-1.ko := ld -r -m elf_i386 -T ./scripts/module-common.lds --build-id  -o /home/wfl/Desktop/cse331/antv/on_access/on_access-1.ko /home/wfl/Desktop/cse331/antv/on_access/on_access-1.o /home/wfl/Desktop/cse331/antv/on_access/on_access-1.mod.o ;  true

@@ -1,0 +1,1 @@
+cmd_/home/weielin/Desktop/cse331/antv/samples/hijack-master/hack_open.ko := ld -r -m elf_x86_64 -T ./scripts/module-common.lds --build-id  -o /home/weielin/Desktop/cse331/antv/samples/hijack-master/hack_open.ko /home/weielin/Desktop/cse331/antv/samples/hijack-master/hack_open.o /home/weielin/Desktop/cse331/antv/samples/hijack-master/hack_open.mod.o

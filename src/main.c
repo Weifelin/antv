@@ -2,16 +2,151 @@
 #include <whitelist.h>
 
 
-int main(int argc, char const *argv[])
+//#define BUFFER_LENGTH 512
+//static char receive[BUFFER_LENGTH];
+
+
+static size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream){
+        size_t written = fwrite(ptr, size, nmemb, (FILE *)stream);
+        return written;
+}
+
+
+int main(int argc, char const *argv[], char **envp)
 {
     /* code */
 
 
-        /*const char *load="-load";
+        const char *load="-load";
         const char *unload="-unload";
-        const char *update="-update";*/
+        const char *update="-update";
+        int ret = 0;
         const char *scan="-scan";
-        const char *kscan="-kscan";
+        //const char *kscan="-kscan"; /*not used*/
+        CURL *curl_handle;
+
+        FILE* pagefile;
+        FILE* fp;
+    
+        static const char *signatureUrl = "https://raw.githubusercontent.com/Weifelin/DB/master/db.txt";
+        static const char *whitelistUrl = "http://35.231.146.204/whitelist.db";
+
+        const char *usage = "\nUsage: \n"
+                            "-load  load the kernal module.\n"
+                            "-unload  unload the kernal module.\n"
+                            "-update  update virus database and whitelist database.\n"
+                            "-scan  on-demand scan\n" ;
+
+
+        if (argc == 2)
+        {
+            if(strcmp(argv[1],load)==0){
+                printf("%s\n", "loading module....");
+
+                fp=popen(LOAD,"r");
+
+
+                if(fp == NULL){
+                    printf("loading 2 failed");
+                    exit(-1);
+                }
+                printf("%s\n","module is loaded now, check it with dmesg cmd");
+                pclose(fp);
+            }else if(strcmp(argv[1],unload)==0){
+                fp= popen(UNLOAD,"r");
+                if(fp == NULL){
+                    printf("error unloading module");
+                    exit(-1);
+                }
+                printf("%s\n", "module unloaded. check with dmesg!");
+                pclose(fp);
+            }else if(strcmp(argv[1],update)==0){
+
+                printf("%s\n", "updating database....");
+
+                //curl_handle = curl_easy_init();
+                curl_global_init(CURL_GLOBAL_ALL);
+                /* init the curl session */
+                curl_handle = curl_easy_init();
+                /* set URL to get here */
+                curl_easy_setopt(curl_handle, CURLOPT_URL, signatureUrl);
+                /* Switch on full protocol/debug output while testing */
+                curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 1L);
+                /* disable progress meter, set to 0L to enable and disable debug output */
+                curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 1L);
+                /* send all data to this function  */
+                curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_data);
+                /* open the file */
+                pagefile = fopen(DATABASE, "wb");
+                if(pagefile) {
+                    /* write the page body to this file handle */
+                    curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, pagefile);
+                    /* get it! */
+                    curl_easy_perform(curl_handle);
+                    /* close the header file */
+                    fclose(pagefile);
+                }
+
+                printf("%s\n", "signature file updated...");
+                /* set URL to get here */
+                curl_easy_setopt(curl_handle, CURLOPT_URL, whitelistUrl);
+                /* Switch on full protocol/debug output while testing */
+                curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 1L);
+                /* disable progress meter, set to 0L to enable and disable debug output */
+                curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 1L);
+                /* send all data to this function  */
+                curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_data);
+                /* open the file */
+                pagefile = fopen(WHITELISTFILE, "wb");
+                if(pagefile) {
+                    /* write the page body to this file handle */
+                    curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, pagefile);
+                    /* get it! */
+                    curl_easy_perform(curl_handle);
+                    /* close the header file */
+                    fclose(pagefile);
+                }
+                printf("%s\n", "whitelist file updated...");
+                /* cleanup curl stuff */
+                curl_easy_cleanup(curl_handle);
+                curl_global_cleanup();
+                printf("%s\n", "done updating database");
+            }
+            else{
+                printf("Error: incorrect usage.\n%s\n", usage);
+            }
+
+
+        }else if (argc == 3)
+        {
+            if (strcmp(argv[1], scan) == 0)
+            {
+
+                //printf("%s\n", "on-demand scan ivoked....");
+                fprintf(stdout, "on-demand scan ivoked...for : %s\n", argv[2]);
+                ret = on_demand(argv[2]);
+
+            }else{
+                 printf("Error: incorrect usage.\n%s\n", usage);
+            }
+        }else{
+                printf("Error: incorrect usage.\n%s\n", usage);
+        }
+
+
+
+
+
+
+/*  
+        for (char **env = envp; *env != 0; env++)
+        {
+            char *thisEnv = *env;
+            printf("%s\n", thisEnv);    
+        }
+
+
+        printf("END of envp\n" );*/
         //files and urls
         /*static const char *whitelistfilename = "whitelist.out";
         static const char *signaturefilename = "signature.out";
@@ -151,32 +286,86 @@ int main(int argc, char const *argv[])
 
 
 
-        if (strcmp(argv[1], scan) == 0)
+        /*if (strcmp(argv[1], scan) == 0)
         {
 
-            printf("%s\n", "on-demand scan....");
-            on_demand(argv[2]);
+            //printf("%s\n", "on-demand scan ivoked....");
+            fprintf(stdout, "on-demand scan ivoked...for : %s\n", argv[2]);
+            ret = on_demand(argv[2]);
+
         }
-        else if (strcmp(argv[1], kscan) == 0) /*will only be used by kernal*/
+        else if (strcmp(argv[1], kscan) == 0) //will only be used by kernal
         {
-            printf("%s\n", "on-access scan....");
-            on_access(argv[2]);
-        }
+
+
+            printf("%s\n", "on_access invoked");
+            //on_access(argv[2]);
+            int ret = 0;
+            uid_t euid = geteuid();
+            seteuid(0);
+            //int fd = open("/dev/antv_char", O_RDWR);
+            int fd = -1;
+
+            do{
+                fd = open("/dev/antv_char", O_RDWR);
+            }while (fd == -1);
+            if (fd == -1)
+            {
+               
+        
+                fprintf(stderr, "Error when open /dev/antv_char. Error: %s\n", strerror(errno));
+            }
+
+
+            seteuid(euid);
+            while(ret>=0){
+                
+                ret = read(fd, receive, BUFFER_LENGTH);   //reading filename.
+                if (ret < 0){
+                     perror("Failed to read the message from the device.");
+                     printf("FILE:%s, RET: %i\n", receive, ret);
+                }
+
+                if (ret != 0)
+                {
+                    int result = on_demand(receive);
+                    char stringToSend[1];
+                    if (result == SUCCESS)
+                    {
+                        stringToSend[0] = 'S';
+                    }else{
+                        stringToSend[0] = 'F';
+                    }
+                    ret = write(fd, stringToSend, strlen(stringToSend)); // Send the string to the LKM
+                    if (ret < 0){
+                       perror("Failed to write the message to the device.");
+                       return errno;
+                    }
+
+                }
+                
+
+            }
+            seteuid(euid);
+
+
+        }*/
 
 
 
 
 
 
-    return 0;
+    return ret;
 
 }
 
 
 
 
-void on_demand(const char* start_path){
+int on_demand(const char* start_path){
 
+    int re = SUCCESS;
     FILE* db = fopen(DATABASE, "r");
     char virus_name[MAX_NAME_LEN];
 
@@ -215,7 +404,8 @@ void on_demand(const char* start_path){
                         {
                             printf("%s\n", "ERROR WHEN OPEN FILE");
                             fclose(db);
-                            exit(EXIT_FAILURE);
+                            //exit(EXIT_FAILURE);
+                            return FAIL;
                         }
 
                         int result = scan(fd, db, virus_name);
@@ -228,6 +418,7 @@ void on_demand(const char* start_path){
                                 printf("%s is DETECTED, removing permission.\n", virus_name);
 
                                 /*Rename*/
+                                re = FOUND;
                                 int ret = rename_and_remove_permission(path);
                                 if (ret == FAIL)
                                 {
@@ -265,7 +456,8 @@ void on_demand(const char* start_path){
             {
                 printf("%s\n", "ERROR WHEN OPEN FILE");
                 fclose(db);
-                exit(EXIT_FAILURE);
+                return FAIL;
+                //exit(EXIT_FAILURE);
             }
 
             int result = scan(fd, db, virus_name);
@@ -278,6 +470,7 @@ void on_demand(const char* start_path){
                     printf("%s is DETECTED, removing permission.\n", virus_name);
 
                     /*Rename*/
+                    re = FOUND;
                     int ret = rename_and_remove_permission(start_path);
                     if (ret == FAIL)
                     {
@@ -303,10 +496,11 @@ void on_demand(const char* start_path){
 
 
     fclose(db);
+    return re;
 
 }
 
-void on_access(const char* path){
+int on_access(const char* path){
     int dd = open(DATABASE, SC_FG);
     FILE* db = fdopen(dd, "r");
     //FILE* db = fopen(DATABASE, "r");
@@ -325,7 +519,8 @@ void on_access(const char* path){
         {
             printf("%s\n", "ERROR WHEN OPEN FILE");
             fclose(db);
-            exit(EXIT_SUCCESS); /*got infected file and unable to open it is normal*/
+            //exit(EXIT_SUCCESS); /*got infected file and unable to open it is normal*/
+            return FAIL;
         }
 
         int result = scan(fd, db, virus_name);
@@ -361,6 +556,7 @@ void on_access(const char* path){
 
 
     fclose(db);
+    return SUCCESS;
 }
 /*From Vic,
     determine if the path is directory*/
@@ -373,6 +569,9 @@ bool is_dir(const char* path){
 
 
 int rename_and_remove_permission(const char* pathname){
+
+
+    fprintf(stdout, "renameing...for : %s\n", pathname);
 
     char newname[PATH_MAX];
     *newname = 0;

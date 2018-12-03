@@ -8,7 +8,7 @@ MODULE_AUTHOR("Alan <ex0dus@codemuch.tech>");
 MODULE_VERSION("0.0.1");
 MODULE_DESCRIPTION("We hack the kernel");
 
-unsigned long *sys_call_table = (unsigned long) 0xffffffffbbc00180;
+unsigned long *sys_call_table = (unsigned long) 0xffffffff9e600200;
 
 /* This defines a pointer to the real open() syscall */
 asmlinkage int (*old_open)(const char *filename, int flags, int mode);
