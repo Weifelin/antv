@@ -32,10 +32,10 @@ int main(int argc, char const *argv[], char **envp)
         static const char *whitelistUrl = "http://35.231.146.204/whitelist.db";
 
         const char *usage = "\nUsage: \n"
-                            "-load  load the kernal module.\n"
-                            "-unload  unload the kernal module.\n"
-                            "-update  update virus database and whitelist database.\n"
-                            "-scan  on-demand scan\n" ;
+                            "[bin/antv -load]               load the kernal module.\n"
+                            "[bin/antv -unload]             unload the kernal module.\n"
+                            "[bin/antv -update]             update virus database and whitelist database.\n"
+                            "[bin/antv -scan filename]      on-demand scan\n" ;
 
 
         if (argc == 2)
@@ -43,23 +43,40 @@ int main(int argc, char const *argv[], char **envp)
             if(strcmp(argv[1],load)==0){
                 printf("%s\n", "loading module....");
 
+                uid_t euid = geteuid();
+                seteuid(0);
                 fp=popen(LOAD,"r");
 
 
                 if(fp == NULL){
                     printf("loading 2 failed");
+                    seteuid(euid);
                     exit(-1);
                 }
+                seteuid(euid);
                 printf("%s\n","module is loaded now, check it with dmesg cmd");
                 pclose(fp);
+
             }else if(strcmp(argv[1],unload)==0){
-                fp= popen(UNLOAD,"r");
+                uid_t euid = geteuid();
+                seteuid(0);
+                /*fp= popen(UNLOAD,"r");
                 if(fp == NULL){
                     printf("error unloading module");
+                    seteuid(euid);
+                    exit(-1);
+                }*/
+                int e = system(UNLOAD);
+                if (e == -1)
+                {
+                    printf("error unloading module");
+                    seteuid(euid);
                     exit(-1);
                 }
+
+                seteuid(euid);
                 printf("%s\n", "module unloaded. check with dmesg!");
-                pclose(fp);
+                //pclose(fp);
             }else if(strcmp(argv[1],update)==0){
 
                 printf("%s\n", "updating database....");
@@ -135,221 +152,6 @@ int main(int argc, char const *argv[], char **envp)
 
 
 
-
-
-
-/*  
-        for (char **env = envp; *env != 0; env++)
-        {
-            char *thisEnv = *env;
-            printf("%s\n", thisEnv);    
-        }
-
-
-        printf("END of envp\n" );*/
-        //files and urls
-        /*static const char *whitelistfilename = "whitelist.out";
-        static const char *signaturefilename = "signature.out";
-        static const char *signatureUrl = "http://35.231.146.204/signature.db";
-        static const char *whitelistUrl = "http://35.231.146.204/whitelist.db";
-        //usage printout
-        const char *usage = "\nUsage: \n"
-                            "-load  load the kernal module.\n"
-                            "-unload  unload the kernal module.\n"
-                            "-update  update virus database and whitelist database.\n"
-                            "-scan  on-demand scan\n" ;
-*/
-        //var
-        /*FILE *fp;
-        CURL *curl_handle;
-        FILE *pagefile;
-        unsigned char **sigs;       //save all the sigs in heap
-        int *sigs_length;
-        int sigNumber=0;
-        int status;
-
-        char *address;
-        int buffer_size = 100;
-        char buffer[buffer_size];
-        // should be change when module is ready
-        char *moduleName = "hack_open.ko";
-*/
-
-        //testing
-        //int BUFSIZ = 1024;
-
-
-
-        // if(argc == 2 ){
-        //     if(strcmp(argv[1],load)==0){
-        //         printf("%s\n", "loading module....");
-        //         printf("%s\n", "1.get sys_call_table address....");
-        //         fp=popen("sudo cat /boot/System.map-*-generic| grep sys_call_table | awk '{print $1}'","r");
-        //         if(fp == NULL){
-        //             printf("step 1 failed");
-        //             exit(-1);
-        //         }
-        //         address = malloc(sizeof( char)*buffer_size);
-        //         fgets(buffer,buffer_size,fp);
-        //         strcpy(address,buffer);
-        //         printf("++address: %s\n", buffer );
-        //         fclose(fp);
-        //         printf("%s\n", "2.loading module");
-        //         printf(" loading module : %s\n", moduleName);
-        //         fp=popen("sudo insmod hack_open.ko","r");
-        //         if(fp == NULL){
-        //             printf("step 2 failed");
-        //             exit(-1);
-        //         }
-        //         printf("%s\n","module is loaded now, check it with dmesg cmd");
-        //         fclose(fp);
-        //     }else if(strcmp(argv[1],unload)==0){
-        //         fp= popen("sudo rmmod hack_open","r");
-        //         if(fp == NULL){
-        //             printf("error unloading module");
-        //             exit(-1);
-        //         }
-        //         printf("%s\n", "module unloaded. check with dmesg!");
-        //         fclose(fp);
-        //     }else if(strcmp(argv[1],update)==0){
-        //         printf("%s\n", "updating database....");
-        //         curl_handle = curl_easy_init();
-        //         curl_global_init(CURL_GLOBAL_ALL);
-        //         /* init the curl session */
-        //         curl_handle = curl_easy_init();
-        //         /* set URL to get here */
-        //         curl_easy_setopt(curl_handle, CURLOPT_URL, signatureUrl);
-        //         /* Switch on full protocol/debug output while testing */
-        //         curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 1L);
-        //         /* disable progress meter, set to 0L to enable and disable debug output */
-        //         curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 1L);
-        //         /* send all data to this function  */
-        //         curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_data);
-        //         /* open the file */
-        //         pagefile = fopen(signaturefilename, "wb");
-        //         if(pagefile) {
-        //             /* write the page body to this file handle */
-        //             curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, pagefile);
-        //             /* get it! */
-        //             curl_easy_perform(curl_handle);
-        //             /* close the header file */
-        //             fclose(pagefile);
-        //         }
-        //         printf("%s\n", "signature file updated...");
-        //         /* set URL to get here */
-        //         curl_easy_setopt(curl_handle, CURLOPT_URL, whitelistUrl);
-        //         /* Switch on full protocol/debug output while testing */
-        //         curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 1L);
-        //         /* disable progress meter, set to 0L to enable and disable debug output */
-        //         curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 1L);
-        //         /* send all data to this function  */
-        //         curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_data);
-        //         /* open the file */
-        //         pagefile = fopen(whitelistfilename, "wb");
-        //         if(pagefile) {
-        //             /* write the page body to this file handle */
-        //             curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, pagefile);
-        //             /* get it! */
-        //             curl_easy_perform(curl_handle);
-        //             /* close the header file */
-        //             fclose(pagefile);
-        //         }
-        //         printf("%s\n", "whitelist file updated...");
-        //         /* cleanup curl stuff */
-        //         curl_easy_cleanup(curl_handle);
-        //         curl_global_cleanup();
-        //         printf("%s\n", "done updating database");
-        //     }else{
-        //         printf("Error: incorrect usage.\n%s\n", usage);
-        //     }
-        // }
-        // else if(argc ==3){
-        //     if(strcmp(argv[1],scan)==0){
-
-        //         printf("%s\n", "on-demand scan....");
-        //         sigs = processSig(sigs,&sigNumber,&sigs_length,signaturefilename);  //at this point sigs are in memory in ascii code
-        //         scan_f(argv[2],sigs,sigs_length,sigNumber);
-
-        //     }else if(strcmp(argv[1],scan)==0){
-
-        //         printf("%s\n", "on-access scan....");
-        //         sigs = processSig(sigs,&sigNumber,&sigs_length,signaturefilename);  //at this point sigs are in memory in ascii code
-        //         scan_f(argv[2],sigs,sigs_length,sigNumber);
-        //     }
-        //     else{
-        //         printf("Error: incorrect usage.\n%s\n", usage);
-        //     }
-        // }else{
-        //     printf("Error: incorrect usage.\n%s\n", usage);
-        // }
-
-
-
-
-        /*if (strcmp(argv[1], scan) == 0)
-        {
-
-            //printf("%s\n", "on-demand scan ivoked....");
-            fprintf(stdout, "on-demand scan ivoked...for : %s\n", argv[2]);
-            ret = on_demand(argv[2]);
-
-        }
-        else if (strcmp(argv[1], kscan) == 0) //will only be used by kernal
-        {
-
-
-            printf("%s\n", "on_access invoked");
-            //on_access(argv[2]);
-            int ret = 0;
-            uid_t euid = geteuid();
-            seteuid(0);
-            //int fd = open("/dev/antv_char", O_RDWR);
-            int fd = -1;
-
-            do{
-                fd = open("/dev/antv_char", O_RDWR);
-            }while (fd == -1);
-            if (fd == -1)
-            {
-               
-        
-                fprintf(stderr, "Error when open /dev/antv_char. Error: %s\n", strerror(errno));
-            }
-
-
-            seteuid(euid);
-            while(ret>=0){
-                
-                ret = read(fd, receive, BUFFER_LENGTH);   //reading filename.
-                if (ret < 0){
-                     perror("Failed to read the message from the device.");
-                     printf("FILE:%s, RET: %i\n", receive, ret);
-                }
-
-                if (ret != 0)
-                {
-                    int result = on_demand(receive);
-                    char stringToSend[1];
-                    if (result == SUCCESS)
-                    {
-                        stringToSend[0] = 'S';
-                    }else{
-                        stringToSend[0] = 'F';
-                    }
-                    ret = write(fd, stringToSend, strlen(stringToSend)); // Send the string to the LKM
-                    if (ret < 0){
-                       perror("Failed to write the message to the device.");
-                       return errno;
-                    }
-
-                }
-                
-
-            }
-            seteuid(euid);
-
-
-        }*/
 
 
 

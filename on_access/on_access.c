@@ -30,7 +30,7 @@
     https://github.com/derekmolloy/exploringBB/tree/master/extras/kernel/ebbcharmutex
 */
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("Weifelin");
+MODULE_AUTHOR("Modified by Weifelin");
 MODULE_VERSION("0.0.1");
 MODULE_DESCRIPTION("RIVSED for CSE331 PROJECT");
 
@@ -139,10 +139,11 @@ new_open(const char *filename, int flags, int mode)
     /*
       calling user space function. Calling antv.
     */
-    if (strcmp(filename, "/home/wfl/Desktop/cse331/antv/bin/antv") == 0)
+    
+    /*if (strcmp(filename, "/home/wfl/Desktop/cse331/antv/bin/antv") == 0)
     {
       return (*old_open)(filename, flags, mode);
-    }
+    }*/
 
 
     if(!mutex_trylock(&antv_mutex)){                  // Try to acquire the mutex (returns 0 on fail)
@@ -164,6 +165,7 @@ new_open(const char *filename, int flags, int mode)
         "DISPLAY=:0", 
         NULL };
     int cu = call_usermodehelper( argv[0], argv, envp, UMH_WAIT_PROC);
+
     /*sub_info = call_usermodehelper_setup(argv[0], argv, envp, GFP_ATOMIC, NULL, NULL, NULL);
     if(sub_info == NULL) {
       //return -ENOMEM;
@@ -179,7 +181,7 @@ new_open(const char *filename, int flags, int mode)
     sys_call_table[__NR_open] = new_open;
 
     mutex_unlock(&antv_mutex); 
-    printk(KERN_ALERT "MUTEX: unlocked");
+    //printk(KERN_ALERT "MUTEX: unlocked");
 
     /* give execution BACK to the original syscall */
     return (*old_open)(filename, flags, mode);
@@ -253,7 +255,7 @@ cleanup(void)
     class_destroy(antv_class);                         // remove the device class
     unregister_chrdev(majorNumber, DEVICE_NAME);         // unregister the major number
 */
-    printk(KERN_INFO "We are now leaving Kernel Town! Thanks for the stay!\n");
+    printk(KERN_INFO "Cleared UP!\n");
     return;
 }
 
